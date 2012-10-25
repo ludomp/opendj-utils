@@ -1,0 +1,463 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:ns="urn:oasis:names:tc:DSML:2:0:core" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:y="urn:oasis:names:tc:DSML:2:0:core" name="dsmlQuery" targetNamespace="urn:oasis:names:tc:DSML:2:0:core">
+  <types>
+    <xsd:schema xmlns="urn:oasis:names:tc:DSML:2:0:core" xmlns:http="http://schemas.xmlsoap.org/wsdl/http/" xmlns:mime="http://schemas.xmlsoap.org/wsdl/mime/" xmlns:ns="urn:oasis:names:tc:DSML:2:0:core" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:soapenc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:y="urn:oasis:names:tc:DSML:2:0:core" elementFormDefault="qualified" targetNamespace="urn:oasis:names:tc:DSML:2:0:core">
+      <xsd:group name="DSMLRequests">
+        <xsd:choice>
+          <xsd:element name="authRequest" type="AuthRequest"/>
+          <xsd:group ref="BatchRequests"/>
+        </xsd:choice>
+      </xsd:group>
+      <xsd:group name="BatchRequests">
+        <xsd:choice>
+          <xsd:element name="abandonRequest" type="AbandonRequest"/>
+          <xsd:element name="addRequest" type="AddRequest"/>
+          <xsd:element name="compareRequest" type="CompareRequest"/>
+          <xsd:element name="delRequest" type="DelRequest"/>
+          <xsd:element name="extendedRequest" type="ExtendedRequest"/>
+          <xsd:element name="modDNRequest" type="ModifyDNRequest"/>
+          <xsd:element name="modifyRequest" type="ModifyRequest"/>
+          <xsd:element name="searchRequest" type="SearchRequest"/>
+        </xsd:choice>
+      </xsd:group>
+      <xsd:group name="DSMLResponses">
+        <xsd:choice>
+          <xsd:element name="addResponse" type="LDAPResult"/>
+          <xsd:element name="authResponse" type="LDAPResult"/>
+          <xsd:element name="compareResponse" type="LDAPResult"/>
+          <xsd:element name="delResponse" type="LDAPResult"/>
+          <xsd:element name="errorResponse" type="ErrorResponse"/>
+          <xsd:element name="extendedResponse" type="ExtendedResponse"/>
+          <xsd:element name="modDNResponse" type="LDAPResult"/>
+          <xsd:element name="modifyResponse" type="LDAPResult"/>
+          <xsd:element name="searchResultDone" type="LDAPResult"/>
+          <xsd:element name="searchResultEntry" type="SearchResultEntry"/>
+          <xsd:element name="searchResultReference" type="SearchResultReference"/>
+        </xsd:choice>
+      </xsd:group>
+      <xsd:element name="batchRequest" type="BatchRequest"/>
+      <xsd:element name="batchResponse" type="BatchResponse"/>
+      <xsd:complexType name="BatchRequest">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="authRequest" type="AuthRequest"/>
+          <xsd:group maxOccurs="unbounded" minOccurs="0" ref="BatchRequests"/>
+        </xsd:sequence>
+        <xsd:attribute name="requestID" type="RequestID" use="optional"/>
+        <xsd:attribute default="sequential" name="processing" use="optional">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="sequential"/>
+              <xsd:enumeration value="parallel"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute default="sequential" name="responseOrder" use="optional">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="sequential"/>
+              <xsd:enumeration value="unordered"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+        <xsd:attribute default="exit" name="onError" use="optional">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="resume"/>
+              <xsd:enumeration value="exit"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+      </xsd:complexType>
+      <xsd:complexType name="BatchResponse">
+        <xsd:sequence>
+          <xsd:group maxOccurs="unbounded" minOccurs="0" ref="BatchResponses"/>
+        </xsd:sequence>
+        <xsd:attribute name="requestID" type="RequestID" use="optional"/>
+      </xsd:complexType>
+      <xsd:group name="BatchResponses">
+        <xsd:choice>
+          <xsd:element name="addResponse" type="LDAPResult"/>
+          <xsd:element name="authResponse" type="LDAPResult"/>
+          <xsd:element name="compareResponse" type="LDAPResult"/>
+          <xsd:element name="delResponse" type="LDAPResult"/>
+          <xsd:element name="errorResponse" type="ErrorResponse"/>
+          <xsd:element name="extendedResponse" type="ExtendedResponse"/>
+          <xsd:element name="modDNResponse" type="LDAPResult"/>
+          <xsd:element name="modifyResponse" type="LDAPResult"/>
+          <xsd:element name="searchResponse" type="SearchResponse"/>
+        </xsd:choice>
+      </xsd:group>
+      <xsd:complexType name="SearchResponse">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="searchResultEntry" type="SearchResultEntry"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="searchResultReference" type="SearchResultReference"/>
+          <xsd:element name="searchResultDone" type="LDAPResult"/>
+        </xsd:sequence>
+        <xsd:attribute name="requestID" type="RequestID" use="optional"/>
+      </xsd:complexType>
+      <xsd:simpleType name="DsmlDN">
+        <xsd:restriction base="xsd:string"/>
+      </xsd:simpleType>
+      <xsd:simpleType name="DsmlRDN">
+        <xsd:restriction base="xsd:string"/>
+      </xsd:simpleType>
+      <xsd:simpleType name="RequestID">
+        <xsd:restriction base="xsd:string"/>
+      </xsd:simpleType>
+      <xsd:simpleType name="AttributeDescriptionValue">
+        <xsd:restriction base="xsd:string">
+          <xsd:pattern value="((([0-2](\.[0-9]+)+)|([a-zA-Z]+([-a-zA-Z0-9])*))(;([-a-zA-Z0-9])+)*)"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="NumericOID">
+        <xsd:restriction base="xsd:string">
+          <xsd:pattern value="[0-2]\.[0-9]+(\.[0-9]+)*"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="MAXINT">
+        <xsd:restriction base="xsd:unsignedInt">
+          <xsd:maxInclusive value="2147483647"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:simpleType name="DsmlValue">
+        <xsd:union memberTypes="xsd:string xsd:base64Binary xsd:anyURI"/>
+      </xsd:simpleType>
+      <xsd:complexType name="Control">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="controlValue" type="xsd:anyType"/>
+        </xsd:sequence>
+        <xsd:attribute name="type" type="NumericOID" use="required"/>
+        <xsd:attribute default="false" name="criticality" type="xsd:boolean" use="optional"/>
+      </xsd:complexType>
+      <xsd:complexType name="Filter">
+        <xsd:group ref="FilterGroup"/>
+      </xsd:complexType>
+      <xsd:group name="FilterGroup">
+        <xsd:sequence>
+          <xsd:choice>
+            <xsd:element name="and" type="FilterSet"/>
+            <xsd:element name="or" type="FilterSet"/>
+            <xsd:element name="not" type="Filter"/>
+            <xsd:element name="equalityMatch" type="AttributeValueAssertion"/>
+            <xsd:element name="substrings" type="SubstringFilter"/>
+            <xsd:element name="greaterOrEqual" type="AttributeValueAssertion"/>
+            <xsd:element name="lessOrEqual" type="AttributeValueAssertion"/>
+            <xsd:element name="present" type="AttributeDescription"/>
+            <xsd:element name="approxMatch" type="AttributeValueAssertion"/>
+            <xsd:element name="extensibleMatch" type="MatchingRuleAssertion"/>
+          </xsd:choice>
+        </xsd:sequence>
+      </xsd:group>
+      <xsd:complexType name="FilterSet">
+        <xsd:sequence>
+          <xsd:group maxOccurs="unbounded" minOccurs="0" ref="FilterGroup"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="AttributeValueAssertion">
+        <xsd:sequence>
+          <xsd:element name="value" type="DsmlValue"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="AttributeDescriptionValue" use="required"/>
+      </xsd:complexType>
+      <xsd:complexType name="AttributeDescription">
+        <xsd:attribute name="name" type="AttributeDescriptionValue" use="required"/>
+      </xsd:complexType>
+      <xsd:complexType name="SubstringFilter">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="initial" type="DsmlValue"/>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="any" type="DsmlValue"/>
+          <xsd:element minOccurs="0" name="final" type="DsmlValue"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="AttributeDescriptionValue" use="required"/>
+      </xsd:complexType>
+      <xsd:complexType name="MatchingRuleAssertion">
+        <xsd:sequence>
+          <xsd:element name="value" type="DsmlValue"/>
+        </xsd:sequence>
+        <xsd:attribute default="false" name="dnAttributes" type="xsd:boolean" use="optional"/>
+        <xsd:attribute name="matchingRule" type="xsd:string" use="optional"/>
+        <xsd:attribute name="name" type="AttributeDescriptionValue" use="optional"/>
+      </xsd:complexType>
+      <xsd:complexType name="DsmlMessage">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="control" type="Control"/>
+        </xsd:sequence>
+        <xsd:attribute name="requestID" type="RequestID" use="optional"/>
+      </xsd:complexType>
+      <xsd:simpleType name="LDAPResultCode">
+        <xsd:restriction base="xsd:string">
+          <xsd:enumeration value="success"/>
+          <xsd:enumeration value="operationsError"/>
+          <xsd:enumeration value="protocolError"/>
+          <xsd:enumeration value="timeLimitExceeded"/>
+          <xsd:enumeration value="sizeLimitExceeded"/>
+          <xsd:enumeration value="compareFalse"/>
+          <xsd:enumeration value="compareTrue"/>
+          <xsd:enumeration value="authMethodNotSupported"/>
+          <xsd:enumeration value="strongAuthRequired"/>
+          <xsd:enumeration value="referral"/>
+          <xsd:enumeration value="adminLimitExceeded"/>
+          <xsd:enumeration value="unavailableCriticalExtension"/>
+          <xsd:enumeration value="confidentialityRequired"/>
+          <xsd:enumeration value="saslBindInProgress"/>
+          <xsd:enumeration value="noSuchAttribute"/>
+          <xsd:enumeration value="undefinedAttributeType"/>
+          <xsd:enumeration value="inappropriateMatching"/>
+          <xsd:enumeration value="constraintViolation"/>
+          <xsd:enumeration value="attributeOrValueExists"/>
+          <xsd:enumeration value="invalidAttributeSyntax"/>
+          <xsd:enumeration value="noSuchObject"/>
+          <xsd:enumeration value="aliasProblem"/>
+          <xsd:enumeration value="invalidDNSyntax"/>
+          <xsd:enumeration value="aliasDereferencingProblem"/>
+          <xsd:enumeration value="inappropriateAuthentication"/>
+          <xsd:enumeration value="invalidCredentials"/>
+          <xsd:enumeration value="insufficientAccessRights"/>
+          <xsd:enumeration value="busy"/>
+          <xsd:enumeration value="unavailable"/>
+          <xsd:enumeration value="unwillingToPerform"/>
+          <xsd:enumeration value="loopDetect"/>
+          <xsd:enumeration value="namingViolation"/>
+          <xsd:enumeration value="objectClassViolation"/>
+          <xsd:enumeration value="notAllowedOnNonLeaf"/>
+          <xsd:enumeration value="notAllowedOnRDN"/>
+          <xsd:enumeration value="entryAlreadyExists"/>
+          <xsd:enumeration value="objectClassModsProhibited"/>
+          <xsd:enumeration value="affectMultipleDSAs"/>
+          <xsd:enumeration value="other"/>
+        </xsd:restriction>
+      </xsd:simpleType>
+      <xsd:complexType name="ResultCode">
+        <xsd:attribute name="code" type="xsd:int" use="required"/>
+        <xsd:attribute name="descr" type="LDAPResultCode" use="optional"/>
+      </xsd:complexType>
+      <xsd:complexType name="LDAPResult">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element name="resultCode" type="ResultCode"/>
+              <xsd:element minOccurs="0" name="errorMessage" type="xsd:string"/>
+              <xsd:element maxOccurs="unbounded" minOccurs="0" name="referral" type="xsd:anyURI"/>
+            </xsd:sequence>
+            <xsd:attribute name="matchedDN" type="DsmlDN" use="optional"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="ErrorResponse">
+        <xsd:sequence>
+          <xsd:element minOccurs="0" name="message" type="xsd:string"/>
+          <xsd:element minOccurs="0" name="detail">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:any/>
+              </xsd:sequence>
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:sequence>
+        <xsd:attribute name="requestID" type="RequestID" use="optional"/>
+        <xsd:attribute name="type">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="notAttempted"/>
+              <xsd:enumeration value="couldNotConnect"/>
+              <xsd:enumeration value="connectionClosed"/>
+              <xsd:enumeration value="malformedRequest"/>
+              <xsd:enumeration value="gatewayInternalError"/>
+              <xsd:enumeration value="authenticationFailed"/>
+              <xsd:enumeration value="unresolvableURI"/>
+              <xsd:enumeration value="other"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+      </xsd:complexType>
+      <xsd:complexType name="AuthRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:attribute name="principal" type="xsd:string" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="AttributeDescriptions">
+        <xsd:sequence maxOccurs="unbounded" minOccurs="0">
+          <xsd:element name="attribute" type="AttributeDescription"/>
+        </xsd:sequence>
+      </xsd:complexType>
+      <xsd:complexType name="SearchRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element name="filter" type="Filter"/>
+              <xsd:element minOccurs="0" name="attributes" type="AttributeDescriptions"/>
+            </xsd:sequence>
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+            <xsd:attribute name="scope" use="required">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="baseObject"/>
+                  <xsd:enumeration value="singleLevel"/>
+                  <xsd:enumeration value="wholeSubtree"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:attribute>
+            <xsd:attribute name="derefAliases" use="required">
+              <xsd:simpleType>
+                <xsd:restriction base="xsd:string">
+                  <xsd:enumeration value="neverDerefAliases"/>
+                  <xsd:enumeration value="derefInSearching"/>
+                  <xsd:enumeration value="derefFindingBaseObj"/>
+                  <xsd:enumeration value="derefAlways"/>
+                </xsd:restriction>
+              </xsd:simpleType>
+            </xsd:attribute>
+            <xsd:attribute default="0" name="sizeLimit" type="MAXINT" use="optional"/>
+            <xsd:attribute default="0" name="timeLimit" type="MAXINT" use="optional"/>
+            <xsd:attribute default="false" name="typesOnly" type="xsd:boolean" use="optional"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="SearchResultEntry">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element maxOccurs="unbounded" minOccurs="0" name="attr" type="DsmlAttr"/>
+            </xsd:sequence>
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="DsmlAttr">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="value" type="DsmlValue"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="AttributeDescriptionValue" use="required"/>
+      </xsd:complexType>
+      <xsd:complexType name="DsmlModification">
+        <xsd:sequence>
+          <xsd:element maxOccurs="unbounded" minOccurs="0" name="value" type="DsmlValue"/>
+        </xsd:sequence>
+        <xsd:attribute name="name" type="AttributeDescriptionValue" use="required"/>
+        <xsd:attribute name="operation" use="required">
+          <xsd:simpleType>
+            <xsd:restriction base="xsd:string">
+              <xsd:enumeration value="add"/>
+              <xsd:enumeration value="delete"/>
+              <xsd:enumeration value="replace"/>
+            </xsd:restriction>
+          </xsd:simpleType>
+        </xsd:attribute>
+      </xsd:complexType>
+      <xsd:complexType name="SearchResultReference">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element maxOccurs="unbounded" name="ref" type="xsd:anyURI"/>
+            </xsd:sequence>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="ModifyRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element maxOccurs="unbounded" minOccurs="0" name="modification" type="DsmlModification"/>
+            </xsd:sequence>
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="AddRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element maxOccurs="unbounded" minOccurs="0" name="attr" type="DsmlAttr"/>
+            </xsd:sequence>
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="DelRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="ModifyDNRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+            <xsd:attribute name="newrdn" type="DsmlRDN" use="required"/>
+            <xsd:attribute default="true" name="deleteoldrdn" type="xsd:boolean" use="optional"/>
+            <xsd:attribute name="newSuperior" type="DsmlDN" use="optional"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="CompareRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element name="assertion" type="AttributeValueAssertion"/>
+            </xsd:sequence>
+            <xsd:attribute name="dn" type="DsmlDN" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="AbandonRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:attribute name="abandonID" type="RequestID" use="required"/>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="ExtendedRequest">
+        <xsd:complexContent>
+          <xsd:extension base="DsmlMessage">
+            <xsd:sequence>
+              <xsd:element name="requestName" type="NumericOID"/>
+              <xsd:element minOccurs="0" name="requestValue" type="xsd:anyType"/>
+            </xsd:sequence>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+      <xsd:complexType name="ExtendedResponse">
+        <xsd:complexContent>
+          <xsd:extension base="LDAPResult">
+            <xsd:sequence>
+              <xsd:element minOccurs="0" name="responseName" type="NumericOID"/>
+              <xsd:element minOccurs="0" name="response" type="xsd:anyType"/>
+            </xsd:sequence>
+          </xsd:extension>
+        </xsd:complexContent>
+      </xsd:complexType>
+    </xsd:schema>
+  </types>
+  <message name="dsmlRequest">
+    <part name="batchRequest" element="ns:batchRequest"/>
+  </message>
+  <message name="dsmlResponse">
+    <part name="batchResponse" element="ns:batchResponse"/>
+  </message>
+  <portType name="dsmlSoap">
+    <operation name="directoryRequest">
+      <input message="ns:dsmlRequest"/>
+      <output message="ns:dsmlResponse"/>
+    </operation>
+  </portType>
+  <binding name="dsmlQuerySoap" type="ns:dsmlSoap">
+    <soap:binding style="document" transport="http://schemas.xmlsoap.org/soap/http"/>
+    <operation name="directoryRequest">
+      <soap:operation soapAction="#batchRequest"/>
+      <input>
+        <soap:body use="literal"/>
+      </input>
+      <output>
+        <soap:body use="literal"/>
+      </output>
+    </operation>
+  </binding>
+  <service name="dsmlQueryService">
+    <port name="dsmlSoapQuery" binding="ns:dsmlQuerySoap">
+      <soap:address location="http://localhost:8080/dsml/DSMLServlet"/>
+    </port>
+  </service>
+</definitions>
