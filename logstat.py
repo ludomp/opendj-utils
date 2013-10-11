@@ -61,6 +61,8 @@ class OpStat():
 		self.count0Entries = long(0)
 		self.count1Entry = long(0)
 		self.maxEntries = long(0)
+		self.errors = long(0)
+		self.errorCodes = set()
 
 	def incEtime(self, etime):
 		self.etime += etime
@@ -86,14 +88,23 @@ class OpStat():
 			outfile.write(self.type + ":\t" + str(self.count) + "\tAvg: " +
 			 str(round(float(self.etime) / float(self.count), 3)) +
 			  " ms\tMax: " + str(self.maxEtime) + " ms\t>" + str(self.SLA) +"ms: " +
-			   str(self.countOverSLA) + " (" + str(self.countOverSLA * 100 / self.count) + "%)\t>" +
-			   str(self.SLA * 10) + "ms: " +
-			   str(self.countOver10SLA) + " (" + str(self.countOver10SLA * 100 / self.count) + "%)\n")
+			 str(self.countOverSLA) + " (" + str(self.countOverSLA * 100 / self.count) + "%)\t>" +
+			 str(self.SLA * 10) + "ms: " +
+			 str(self.countOver10SLA) + " (" + str(self.countOver10SLA * 100 / self.count) + "%)\n")
+			outfile.write(self.type + ":\tErrors " + str(self.errors) + " (" +
+			  str(self.errors * 100 / self.count) + "%). ")
+			if self.errors != 0:
+				outfile.write(', '.join(str(e) for e in self.errorCodes))
+			outfile.write("\n")
 		if self.retEntries != 0:
 			outfile.write(self.type + ":\tReturned " + str(round(float(self.retEntries) / float(self.count), 1)) +
 			 " entries in average, max: " + str(self.maxEntries) + ", none: "+ str(self.count0Entries) +
 			 ", single: "+ str(self.count1Entry) +"\n")
 
+	def addError(self, error):
+		self.errors += 1
+		self.errorCodes.add(error)
+		
 class Usage(Exception):
 	def __init__(self, msg):
 		self.msg = msg
@@ -112,7 +123,8 @@ def main(argv=None):
 	doExtended = True
 	doModify = True
 	doModDN = True
-    
+	doAbandon = True
+	
 	IDs = {}
 	if argv is None:
 		argv = sys.argv
@@ -159,6 +171,7 @@ def main(argv=None):
 		doExtended = False
 		doModify = False
 		doModDN = False
+		doAbandon = False
 		opers = ops.split(',')
 		for op in opers:
 			if op == "Search":
@@ -185,6 +198,9 @@ def main(argv=None):
 			if op == "ModDN":
 				doModDN = True
 				continue
+			if op == "Abandon":
+				doAbandon = true
+				continue
 			print >> sys.stderr, "Invalid op name in stats: " + op +", ignored"
 
 	searches = OpStat("Search", sla)
@@ -195,7 +211,8 @@ def main(argv=None):
 	extops = OpStat("Extend", sla)
 	modifies = OpStat("Modify", sla)
 	moddns = OpStat("ModDN", sla)
-
+	abandons = OpStat("Abandon", sla)
+	
 	for logfile in args:
 		try:
 			infile = open(logfile, "r")
@@ -212,36 +229,68 @@ def main(argv=None):
 				if m:
 					searches.incEtime(int(m.group(2)))
 					searches.incEntries(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					searches.addError(int(m2.group(1)))
 			if doAdd and re.search("ADD RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					adds.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					adds.addError(int(m2.group(1)))
 			if doBind and re.search("BIND RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					binds.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					binds.addError(int(m2.group(1)))
 			if doCompare and re.search("COMPARE RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					compares.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 5 and int(m2.group(1)) != 6:
+					compares.addError(int(m2.group(1)))
 			if doDelete and re.search("DELETE RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					deletes.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					deletes.addError(int(m2.group(1)))
 			if doExtended and re.search("EXTENDED RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					extops.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					extops.addError(int(m2.group(1)))
 			if doModify and re.search("MODIFY RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					modifies.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					modifies.addError(int(m2.group(1)))
 			if doModDN and re.search("MODDN RES", i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					moddns.incEtime(int(m.group(1)))
-
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1)) != 0:
+					moddns.addError(int(m2.group(1)))
+			if doAbandon and re.search("ABANDON RES", i):
+				m = re.match(".* etime=(\d+)", i)
+				if m:
+					abandons.incEtime(int(m.group(1)))
+				m2 = re.match(".*result=(\d+) ", i)
+				if m2 and int(m2.group(1) != 118):
+					abandons.addError(int(m2.group(1)))
+					
 		# Done processing that file, lets move to next one
+		infile.close()
 
 	# We're done with all files. Proceed with displaying stats
 	adds.printStats(outfile)
@@ -251,6 +300,7 @@ def main(argv=None):
 	extops.printStats(outfile)
 	modifies.printStats(outfile)
 	moddns.printStats(outfile)
+	abandons.printStats(outfile)
 	searches.printStats(outfile)
 	outfile.write("Done\n")
 	outfile.close()
