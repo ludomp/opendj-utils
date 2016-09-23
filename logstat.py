@@ -40,10 +40,11 @@ import string
 help_message = '''
 Usage: logstat.py [options] file [file ...]
 options:
-\t -a SLA : specifies the SLA in milliseconds
-\t -s operation(s) : specifies which operations to compute stat for. 
-\t -o output : specifies the output file, otherwise stdout is used
+\t --agreement / -a SLA  SLA : specifies the SLA in milliseconds
+\t --stats / -s operation(s) : specifies which operations to compute stat for. 
+\t --output / -o output : specifies the output file, otherwise stdout is used
 \t -r : include replicated operations
+\t -c : access log in combined mode (single line per operation)
 \t -v : verbose mode
 
 '''
@@ -124,13 +125,14 @@ def main(argv=None):
 	doModify = True
 	doModDN = True
 	doAbandon = True
-	
+	isCombined = False
+    
 	IDs = {}
 	if argv is None:
 		argv = sys.argv
 	try:
 		try:
-			opts, args = getopt.getopt(argv[1:], "a:ho:rs:v", ["help", "output="])
+			opts, args = getopt.getopt(argv[1:], "a:cho:rs:v", ["help", "output=", "combined", "stats"])
 		except getopt.error, msg:
 			raise Usage(msg)
 
@@ -140,6 +142,8 @@ def main(argv=None):
 				verbose = True
 			if option == "-r":
 				includeReplOps = True
+			if option in ("-c", "--combined"):
+				isCombined = True
 			if option in ("-h", "--help"):
 				raise Usage(help_message)
 			if option in ("-o", "--output"):
@@ -213,6 +217,27 @@ def main(argv=None):
 	moddns = OpStat("ModDN", sla)
 	abandons = OpStat("Abandon", sla)
 	
+	searchTag = "SEARCH RES"
+	addTag = "ADD RES"
+	bindTag = "BIND RES"
+	compareTag = "COMPARE RES"
+	deleteTag = "DELETE RES"
+	extopTag = "EXTENDED RES"
+	modifyTag = "MODIFY RES"
+	moddnTag = "MODDN RES"
+	abandonTag = "ABANDON RES"
+    
+	if isCombined:
+		searchTag = "SEARCH "
+		addTag = "ADD "
+		bindTag = "BIND "
+		compareTag = "COMPARE "
+		deleteTag = "DELETE "
+		extopTag = "EXTENDED "
+		modifyTag = "MODIFY "
+		moddnTag = "MODDN "
+		abandonTag = "ABANDON "
+        
 	for logfile in args:
 		try:
 			infile = open(logfile, "r")
@@ -224,7 +249,7 @@ def main(argv=None):
 		for i in infile:
 			if re.search(" conn=-1 ", i) and not includeReplOps:
 				continue
-			if doSearch and re.search("SEARCH RES", i):
+			if doSearch and re.search(searchTag, i):
 				m = re.match(".*nentries=(\d+) etime=(\d+)", i)
 				if m:
 					searches.incEtime(int(m.group(2)))
@@ -232,56 +257,56 @@ def main(argv=None):
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					searches.addError(int(m2.group(1)))
-			if doAdd and re.search("ADD RES", i):
+			if doAdd and re.search(addTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					adds.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					adds.addError(int(m2.group(1)))
-			if doBind and re.search("BIND RES", i):
+			if doBind and re.search(bindTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					binds.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					binds.addError(int(m2.group(1)))
-			if doCompare and re.search("COMPARE RES", i):
+			if doCompare and re.search(compareTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					compares.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 5 and int(m2.group(1)) != 6:
 					compares.addError(int(m2.group(1)))
-			if doDelete and re.search("DELETE RES", i):
+			if doDelete and re.search(deleteTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					deletes.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					deletes.addError(int(m2.group(1)))
-			if doExtended and re.search("EXTENDED RES", i):
+			if doExtended and re.search(extopTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					extops.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					extops.addError(int(m2.group(1)))
-			if doModify and re.search("MODIFY RES", i):
+			if doModify and re.search(modifyTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					modifies.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					modifies.addError(int(m2.group(1)))
-			if doModDN and re.search("MODDN RES", i):
+			if doModDN and re.search(moddnTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					moddns.incEtime(int(m.group(1)))
 				m2 = re.match(".*result=(\d+) ", i)
 				if m2 and int(m2.group(1)) != 0:
 					moddns.addError(int(m2.group(1)))
-			if doAbandon and re.search("ABANDON RES", i):
+			if doAbandon and re.search(abandonTag, i):
 				m = re.match(".* etime=(\d+)", i)
 				if m:
 					abandons.incEtime(int(m.group(1)))
