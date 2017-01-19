@@ -37,13 +37,13 @@ import re
 import string
 
 help_message = '''
-Usage: logstat.py [options] file [file ...]
+Usage: filterstat.py [options] file [file ...]
 options:
 \t -f : keep full original filters
 \t -o output : specifies the output file, otherwise stdout is used
 \t -v : verbose mode
 
-
+file must be an OpenDJ textual access log file
 '''
 
 class Usage(Exception):
