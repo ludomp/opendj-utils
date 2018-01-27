@@ -199,7 +199,7 @@ $sortServerSide = 0;
 
 $err[0] = "Successful Operations\n";
 $err[1] = "Operations Error(s)\n";
-$err[2] = "Protocal Errors\n";
+$err[2] = "Protocol Errors\n";
 $err[3] = "Time Limit Exceeded\n";
 $err[4] = "Size Limit Exceeded\n";
 $err[5] = "Compare False\n";
@@ -487,7 +487,7 @@ print " Start TLS:                   $startTLS\n";
 print " SASL Binds:                  $sasl\n";
 if ($sasl > 0){
 	foreach $saslb ( sort {$saslmech{$b} <=> $saslmech{$a} } (keys %saslmech) ){
-		printf "  %-4s  %-12s\n",$saslmech{$saslb}, $saslb;   
+		printf "  %-4s  %-12s\n",$saslmech{$saslb}, $saslb;
 	}
 }
 
@@ -607,7 +607,7 @@ if ($concount > 0){
 if ($usage =~ /i/i || $verb eq "yes"){
 	@ipkeys = keys %ip_hash;
 	@exxCount = keys %exCount;
-	$ip_count = ($#ipkeys + 1)-($#exxCount + 1); 
+	$ip_count = ($#ipkeys + 1)-($#exxCount + 1);
 	if ($ip_count > 0){
 		print "\n\n----- Top $sizeCount Clients -----\n\n";
 		print "Number of Clients:  $ip_count\n\n";
@@ -649,7 +649,7 @@ if ($usage =~ /b/i || $verb eq "yes"){
 	$bind_count = $#bindkeys + 1;
 	if ($bind_count > 0){
 		print "\n----- Top $sizeCount Bind DN's -----\n\n";
-		print "Number of Unique Bind DN's: $bind_count\n\n"; 
+		print "Number of Unique Bind DN's: $bind_count\n\n";
 
 		$bindcount = 0;
 
@@ -688,7 +688,7 @@ if ($usage =~ /a/i || $verb eq "yes"){
 		}
 	}
 }
- 
+
 #########################################
 #                                       #
 #   Gather and process search filters   #
@@ -700,7 +700,7 @@ if ($usage =~ /l/ || $verb eq "yes"){
 	@filterkeys = keys %filter;
 	$filter_count = $#filterkeys + 1;
 	if ($filter_count > 0){
-		print "\n\n----- Top $sizeCount Search Filters -----\n";  
+		print "\n\n----- Top $sizeCount Search Filters -----\n";
 		print "\nNumber of Unique Search Filters: $filter_count\n\n";
 
 		$filtercount = 0;
@@ -726,7 +726,7 @@ if ($usage =~ /l/ || $verb eq "yes"){
 #########################################
 #                                       #
 # Gather and Process the unique etimes  #
-#                                       # 
+#                                       #
 #########################################
 
 
@@ -815,7 +815,7 @@ if ($usage =~ /x/i || $verb eq "yes"){
 
 ############################################
 #
-# Print most commonly requested attributes 
+# Print most commonly requested attributes
 #
 ############################################
 
@@ -840,7 +840,7 @@ if ($usage =~ /r/i || $verb eq "yes"){
 
 #################################
 #
-# abandoned operation stats 
+# abandoned operation stats
 #
 #################################
 
@@ -958,7 +958,7 @@ if ($usage =~ /j/i || $verb eq "yes"){
 	}
 	
 	if ($objectclass > ($search *.25)){
-		print "\n $recCount.  You have a high number of searches that query the entire search base.  Although this is not necessarily bad, it could be resource intensive if the search base contains many entries.\n"; 
+		print "\n $recCount.  You have a high number of searches that query the entire search base.  Although this is not necessarily bad, it could be resource intensive if the search base contains many entries.\n";
 		$recCount++;
 	}
 	
@@ -975,9 +975,9 @@ sub displayUsage {
 	print "Usage:\n\n";
 
 	print " ./logconv.pl [-h] [-d <rootDN>] [-s <size limit>] [-v] [-V]\n";
-	print " [-S <start time>] [-E <end time>]\n"; 
+	print " [-S <start time>] [-E <end time>]\n";
 	print " [-efcibaltnxgju] [ access log ... ... ]";
-	print "\n\n"; 
+	print "\n\n";
 
 	print "- Commandline Switches:\n\n";
 
@@ -985,7 +985,7 @@ sub displayUsage {
         print "         -d <Directory Managers DN>  DEFAULT -> cn=directory manager\n";
         print "         -s <Number of results to return per catagory>  DEFAULT -> 20\n";
         print "         -X <IP address to exclude from connection stats>  E.g. Load balancers\n";
-        print "         -v show version of tool\n"; 
+        print "         -v show version of tool\n";
         print "         -S <time to begin analyzing logfile from>\n";
         print "             E.g. [28/Mar/2002:13:14:22 -0800]\n";
         print "         -E <time to stop analyzing logfile>\n";
@@ -1060,24 +1060,23 @@ sub parseLine {
 		$search++;
 		if ($_ =~ / attrs=\"(.*)\"/i) {
 			$anyAttrs++;
-			$attrs = $1 . " ";
-			while ($attrs =~ /(\S+)\s/g) {
-				$attr{$1}++;
+			foreach my $sel (split /[, ]/, $1) {
+				$attr{$sel}++;
 			}
-		} 
+		}
 		if (/ attrs=ALL/) {
 			$attr{"All Attributes"}++;
 			$anyAttrs++;
 		}
 	
-		if ($verb eq "yes"){ 
+		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $srchConn[$sconn] = $1;}
 			if ($_ =~ /op= *([0-9]+)/i){ $srchOp[$sconn] = $1;}
 			$sconn++;
 		}
 			
 		##### This to get the Base and Scope value
-		##### just in case this happens to be an 
+		##### just in case this happens to be an
 		##### unindexed search....
 	
 	#	if ($_ =~ /base=\"(.*)\" scope=(\d) filter/) {
@@ -1150,7 +1149,7 @@ sub parseLine {
 	if (m/ CONNECT/){
 		$exc = "no";
 		#if ($_ =~ /connection from *([0-9\.]+)/i ) {
-		if ($_ =~ /CONNECT conn=[0-9]+ from=([0-9\.]+)/i ) { 
+		if ($_ =~ /CONNECT conn=[0-9]+ from=([0-9\.]+)/i ) {
 			for ($xxx = 0; $xxx <= $#exclude; $xxx++) {
 				if ($exclude[$xxx] eq $1) {$exc = "yes";}
 			}
@@ -1212,16 +1211,16 @@ sub parseLine {
 	
 	# Anonymous
 	if (m/(SEARCH|ADD|COMPARE|DELETE|MODIFY|MODIFYDN) REQ .* op=0 / || m/ BIND REQ .* dn=\"\"/){ # implicit BIND || explicit BIND
-		$anony++; 
+		$anony++;
 		$bindlist{"Anonymous Binds"}++;
 	}
 
 	# Capture Bind DN
 	if (m/ BIND REQ .* type=.* dn=\"(.*)\"/i ){
-		if ($1 ne ""){ 
+		if ($1 ne ""){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
-			$bindlist{$tmpp} = $bindlist{$tmpp} + 1; 
+			$bindlist{$tmpp} = $bindlist{$tmpp} + 1;
 	
 			$bindInfo[$bc][0] = $tmpp;
 			if ($_ =~ /conn= *([0-9]+)/i) { $bindInfo[$bc][1] = $1; }
@@ -1342,8 +1341,8 @@ sub parseLine {
 			}
 			$ip = $1;
 			$ip_hash{$ip}{"count"}++;
-			if ($_ =~ /conn= *([0-9]+)/i ){ 
-				if ($exc ne "yes"){	$ip_hash2{$ip} = sprintf "%-12s               %18s\n",$1,$ip;} 
+			if ($_ =~ /conn= *([0-9]+)/i ){
+				if ($exc ne "yes"){	$ip_hash2{$ip} = sprintf "%-12s               %18s\n",$1,$ip;}
 				$conn_hash{$1} = $ip;
 			}	
 		}
@@ -1409,7 +1408,7 @@ sub parseLine {
 		}
 		if (m/- T2/){
 			if ($_ =~ /conn= *([0-9]+)/i) {
-				$exc = "no"; 
+				$exc = "no";
 				$ip = $conn_hash{$1};
 				if ($ip eq ""){$ip = "Unknown Host";}
 				for ($xxx = 0; $xxx <= $#exclude; $xxx++){
@@ -1569,7 +1568,7 @@ sub parseLine {
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
 			$tmpp =~ s/\\22/\"/g;
-			$filter{$tmpp} = $filter{$tmpp} + 1; 
+			$filter{$tmpp} = $filter{$tmpp} + 1;
 			$filterInfo[$fcc][0] = $tmpp;
 			if ($_ =~ /conn= *([0-9]+)/i) { $filterInfo[$fcc][1] = $1; }
 			if ($_ =~ /op= *([0-9]+)/i) { $filterInfo[$fcc][2] = $1; }
@@ -1621,7 +1620,7 @@ sub parseLine {
 	
 	if (/ BIND / && /method=sasl/i){
 		$sasl++;
-		if ($_ =~ /mech=(.*)/i ){     
+		if ($_ =~ /mech=(.*)/i ){
 			$saslmech{$1}++;
 		}
 	}
