@@ -143,7 +143,7 @@ $anony = "0";
 $mod = "0";
 $delete = "0";
 $add = "0";
-$modrdn = "0";
+$moddn = "0";
 $restarts = "0";
 $resource = "0";
 $broken = "0";
@@ -350,7 +350,7 @@ for ($count=0; $count < $fc; $count++) {
 #$notes = $notes - $vlvnotes;
 if ($notes < 0){ $notes = "0";}
 
-$allOps = $search + $mod + $add + $delete + $modrdn + $bind + $extendedop;
+$allOps = $search + $mod + $add + $delete + $moddn + $bind + $extendedop;
 
 #####################################
 #                                   #
@@ -377,7 +377,7 @@ print "Searches:                     $search\n";
 print "Modifications:                $mod\n";
 print "Adds:                         $add\n";
 print "Deletes:                      $delete\n";
-print "Mod RDNs:                     $modrdn\n";
+print "Mod DNs:                      $moddn\n";
 print "Delete Subtree                $deleteExt\n";
 print "Sort Server Side              $sortServerSide\n";
 print "\n";
@@ -640,7 +640,7 @@ if ($usage =~ /i/i || $verb eq "yes"){
 
 ###################################
 #                                 #
-#   Gather All unique Bind DN's   #
+#   Gather All unique Bind DNs    #
 #                                 #
 ###################################
 
@@ -648,7 +648,7 @@ if ($usage =~ /b/i || $verb eq "yes"){
 	@bindkeys = keys %bindlist;
 	$bind_count = $#bindkeys + 1;
 	if ($bind_count > 0){
-		print "\n----- Top $sizeCount Bind DN's -----\n\n";
+		print "\n----- Top $sizeCount Bind DNs -----\n\n";
 		print "Number of Unique Bind DN's: $bind_count\n\n";
 
 		$bindcount = 0;
@@ -853,12 +853,12 @@ if ($usage =~ /g/i || $verb eq "yes"){
 		for ($g = 0; $g < $ac; $g++){
 			for ($sc = 0; $sc < $sconn; $sc++){
 				if ($srchConn[$sc] eq $targetConn[$g] && $srchOp[$sc] eq $targetOp[$g] ){
-					print " - SRCH conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";	
+					print " - SEARCH conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($dc = 0; $dc < $dconn; $dc++){
 				if ($delConn[$dc] eq $targetConn[$g] && $delOp[$dc] eq $targetOp[$g]){
-					print " - DEL conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+					print " - DELETE conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($adc = 0; $adc < $aconn; $adc++){
@@ -868,12 +868,12 @@ if ($usage =~ /g/i || $verb eq "yes"){
 			}
 			for ($mc = 0; $mc < $mconn; $mc++){
 				if ($modConn[$mc] eq $targetConn[$g] && $modOp[$mc] eq $targetOp[$g]){
-					print " - MOD conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+					print " - MODIFY conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($mdc = 0; $mdc < $mdconn; $mdc++){
-				if ($modrdnConn[$mdc] eq $targetConn[$g] && $modrdnOp[$mdc] eq $targetOp[$g]){
-					print " - MODRDN conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+				if ($moddnConn[$mdc] eq $targetConn[$g] && $moddnOp[$mdc] eq $targetOp[$g]){
+					print " - MODIFYDN conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($bcb = 0; $bcb < $bconn; $bcb++){
@@ -888,7 +888,7 @@ if ($usage =~ /g/i || $verb eq "yes"){
 			}
 			for ($ec = 0; $ec < $econn; $ec++){
 				if ($extConn[$ec] eq $targetConn[$g] && $extOp[$ec] eq $targetOp[$g]){
-					print " - EXT conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+					print " - EXTENDED conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 		}
@@ -1054,11 +1054,12 @@ sub parseLine {
 	if ($iff >= 10000) { print STDERR sprintf" %10s Lines Processed\n",$ff; $iff="0";}
 	
 	#if (m/ RESULT err/) {$allResults++;}
-	if (m/ RES/) {$allResults++;}
-	#if (m/ SRCH/) {
-	if (m/ SEARCH REQ/) {
+	if (m/ RES conn/) {$allResults++;}
+	if (m/ (SEARCH|DELETE|MODIFY|ADD|MODIFYDN|ABANDON|EXTENDED|BIND) conn/) {$allResults++;}
+
+	if (m/ SEARCH (?:REQ )?conn/) {
 		$search++;
-		if ($_ =~ / attrs=\"(.*)\"/i) {
+		if ($_ =~ / attrs=\"([^"]*)\"/i) {
 			$anyAttrs++;
 			foreach my $sel (split /[, ]/, $1) {
 				$attr{$sel}++;
@@ -1080,13 +1081,13 @@ sub parseLine {
 		##### unindexed search....
 	
 	#	if ($_ =~ /base=\"(.*)\" scope=(\d) filter/) {
-		if ($_ =~ /base=\"(.*)\" scope=(\w+) filter/) {
+		if ($_ =~ /base=\"([^"]*)\" scope=(\w+) filter/) {
 			$tmpBase = $1;
 			$tmpScope = $2;
 		}
 	}
-	#if (m/ DEL/){
-	if (m/ DELETE REQ/){
+
+	if (m/ DELETE (?:REQ )?conn/){
 		$delete++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $delConn[$dconn] = $1;}
@@ -1094,8 +1095,8 @@ sub parseLine {
 			$dconn++;
 		}
 	}
-	#if (m/ MOD/){
-	if (m/ MODIFY REQ/){
+
+	if (m/ MODIFY (?:REQ )?conn/){
 		$mod++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $modConn[$mconn] = $1;}
@@ -1103,8 +1104,8 @@ sub parseLine {
 			$mconn++;
 		}
 	}
-	#if (m/ ADD/){
-	if (m/ ADD REQ/){
+
+	if (m/ ADD (?:REQ )?conn/){
 		$add++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $addConn[$aconn] = $1; }
@@ -1112,16 +1113,16 @@ sub parseLine {
 			$aconn++;
 		}
 	}
-	#if (m/ MODRDN/){
-	if (m/ MODIFYDN REQ/){
-		$modrdn++;
+
+	if (m/ MODIFYDN (?:REQ )?conn/){
+		$moddn++;
 		if ($verb eq "yes"){
-			if ($_ =~ /conn= *([0-9]+)/i){ $modrdnConn[$mdconn] = $1; }
-			if ($_ =~ /op= *([0-9]+)/i){ $modrdnOp[$mdconn] = $1; }
+			if ($_ =~ /conn= *([0-9]+)/i){ $moddnConn[$mdconn] = $1; }
+			if ($_ =~ /op= *([0-9]+)/i){ $moddnOp[$mdconn] = $1; }
 			$mdconn++;
 		}
 	}
-	if (m/ ABANDON /){
+	if (m/ ABANDON (?REQ)?conn/){
 		$abandon++;
 		$allResults++;
 		if ($_ =~ /targetop= *([0-9a-zA-Z]+)/i ){
@@ -1138,7 +1139,7 @@ sub parseLine {
 		$vlv++;
 	}
 #	if (m/ SORT /){$sortvlv++}
-	if (m/ SEARCH REQ/ && /1\.2\.840\.113556\.1\.4\.473/ && /2\.16\.840\.1\.113730\.3\.4\.9/){$sortvlv++}
+	if (m/ SEARCH (?:REQ )?conn/ && /1\.2\.840\.113556\.1\.4\.473/ && /2\.16\.840\.1\.113730\.3\.4\.9/){$sortvlv++}
 	if (m/ version=2/){$version2++}
 	if (m/ version=3/){$version3++}
 	#if (m/ conn=0 fd=/){$restarts++}
@@ -1197,7 +1198,7 @@ sub parseLine {
 		if ($diff >= 16) { $latency[6] ++;}
 	}
 	# Bind Requests
-	if (m/ BIND REQ/){
+	if (m/ BIND (?:REQ )?conn/){
 		$bind++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $bindConn[$bconn] = $1; }
@@ -1207,16 +1208,16 @@ sub parseLine {
 	}
 	
 	# As Directory Manager
-	if (m/ BIND REQ / && m/$manager/i){$dirmgr++}
+	if (m/ BIND (?:REQ )?conn/ && m/$manager/i){$dirmgr++}
 	
 	# Anonymous
-	if (m/(SEARCH|ADD|COMPARE|DELETE|MODIFY|MODIFYDN) REQ .* op=0 / || m/ BIND REQ .* dn=\"\"/){ # implicit BIND || explicit BIND
+	if (m/(SEARCH|ADD|COMPARE|DELETE|MODIFY|MODIFYDN) (?:REQ )?conn.* op=0 / || m/ BIND (?:REQ )?conn.* dn=\"\"/){ # implicit BIND || explicit BIND
 		$anony++;
 		$bindlist{"Anonymous Binds"}++;
 	}
 
 	# Capture Bind DN
-	if (m/ BIND REQ .* type=.* dn=\"(.*)\"/i ){
+	if (m/ BIND (?:REQ )?conn.* type=.* dn=\"([^"]*)\"/i ){
 		if ($1 ne ""){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
@@ -1229,9 +1230,7 @@ sub parseLine {
 		}
 	}
 	
-	
-	#if (m/ UNBIND/){
-	if (m/ UNBIND REQ/){
+	if (m/ UNBIND (?:REQ )?conn/){
 		$unbind++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $unbindConn[$ubconn] = $1; }
@@ -1239,8 +1238,8 @@ sub parseLine {
 			$ubconn++;
 		}
 	}
-	#if (m/ notes=U/){
-	if (m/ SEARCH RES .* unindexed/ || m/which does not have a default ordering matching rule and no ordering rule was specified in the sort key/){
+
+	if (m/ SEARCH (?:RES )?conn.* unindexed/ || m/which does not have a default ordering matching rule and no ordering rule was specified in the sort key/){
 		if ($_ =~ /conn= *([0-9]+)/i){
 			$con = $1;
 			if ($_ =~ /op= *([0-9]+)/i){ $op = $1;}
@@ -1527,8 +1526,8 @@ sub parseLine {
 			}
 		}
 	}
-	#if ($_ =~ /err= *([0-9]+)/i){
-	if ($_ =~ / RES .* result=([0-9]+)/i){
+
+	if ($_ =~ / (?:RES )?conn.* result=([0-9]+)/i){
 		$er[$1]++;
 		if ($1 ne "0"){ $errorck++;}
 		else { $errorsucc++;}
@@ -1541,7 +1540,7 @@ sub parseLine {
 	# Donc je ne sais pas comment mapper les autres tags
 	
 	#if ($_ =~ / tag=101 nentries= *([0-9]+)/i ) {$nentries{$1}++}
-	if ($_ =~ / SEARCH RES .* nentries= *([0-9]+)/i ) {$nentries{$1}++}
+	if ($_ =~ / SEARCH (?:RES )?conn.* nentries= *([0-9]+)/i ) {$nentries{$1}++}
 	if ($_ =~ / tag=111 nentries= *([0-9]+)/i ) {$nentries{$1}++}
 	if ($_ =~ / tag=100 nentries= *([0-9]+)/i ) {$nentries{$1}++}
 	if ($_ =~ / tag=115 nentries= *([0-9]+)/i ) {$nentries{$1}++}
@@ -1552,7 +1551,7 @@ sub parseLine {
 	}
 	
 	#if (m/ EXT oid=/){
-	if (m/ EXTENDED REQ .* oid=/){
+	if (m/ EXTENDED (?:REQ )?conn.* oid=/){
 		$extendedop++;
 		if ($_ =~ /oid=\" *([0-9\.]+)/i ){ $oid{$1}++; }
 		if ($verb eq "yes"){
@@ -1563,8 +1562,7 @@ sub parseLine {
 	}
 	
 	if ($usage =~ /l/ || $verb eq "yes"){
-	#	if (/ SRCH / && / attrs=/ && $_ =~ /filter=\"(.*)\" /i ){
-		if (/ SEARCH REQ / && / attrs=/ && $_ =~ /filter=\"(.*)\" /i ){
+		if (/ SEARCH (?:REQ )?conn/ && / attrs=/ && $_ =~ /filter=\"([^"]*)\" /i ){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
 			$tmpp =~ s/\\22/\"/g;
@@ -1573,8 +1571,7 @@ sub parseLine {
 			if ($_ =~ /conn= *([0-9]+)/i) { $filterInfo[$fcc][1] = $1; }
 			if ($_ =~ /op= *([0-9]+)/i) { $filterInfo[$fcc][2] = $1; }
 			$fcc++;
-	#	} elsif (/ SRCH / && $_ =~ /filter=\"(.*)\"/i){
-		} elsif (/ SEARCH REQ / && $_ =~ /filter=\"(.*)\"/i){
+		} elsif (/ SEARCH (?:REQ )?conn/ && $_ =~ /filter=\"([^"]*)\"/i){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
 			$tmpp =~ s/\\22/\"/g;
@@ -1587,9 +1584,7 @@ sub parseLine {
 	}
 	
 	if ($usage =~ /a/ || $verb eq "yes"){
-	#	if (/ SRCH /   && $_ =~ /base=\"(.*)\" scope/i ){
-		if (/ SEARCH REQ/   && $_ =~ /base=\"(.*)\" scope/i ){
-	#	if (/ SEARCH REQ/   && $_ =~ /base=\"(.*)[^cn=config]\" scope/i ){ # Exclude base searches ending with cn=config
+		if (/ SEARCH (?:REQ )?conn/   && $_ =~ /base=\"([^"]*)\" scope/i ){
 			if ($1 eq ""){$tmpp = "Root DSE";}
 			else {$tmpp = $1;}
 			$tmpp =~ tr/A-Z/a-z/;
@@ -1599,7 +1594,7 @@ sub parseLine {
 	
 	
 	if ($usage =~ /f/ || $verb eq "yes"){
-		if (/ BIND RES .* result=49 authFailureID=/ ){
+		if (/ BIND (RES )?conn.* result=49 authFailureID=/ ){
 			if ($_ =~/ as user (.*) because /i){
 				$ds6xbadpwd{$1}++;
 				$bpc++;
@@ -1631,12 +1626,11 @@ sub parseLine {
 	
 	if (/ conn=/ && /op=/ && / REFERRAL/){ $referral++; }
 	
-#	if (/ options=persistent/){$persistent++;}
-	if (/ SEARCH REQ .* requestControls=2.16.840.1.113730.3.4.3/){$persistent++; $extendedop++;}
+	if (/ SEARCH (?:REQ )?conn.* requestControls=2.16.840.1.113730.3.4.3/){$persistent++; $extendedop++;}
 	
-	if (/ SEARCH REQ .* requestControls=1.2.840.113556.1.4.473$/){$sortServerSide++; $extendedop++;}
+	if (/ SEARCH (?:REQ )?conn.* requestControls=1.2.840.113556.1.4.473$/){$sortServerSide++; $extendedop++;}
 
-	if (/ DELETE REQ .* requestControls=1.2.840.113556.1.4.805/) {$deleteExt++; $extendedop++;}
+	if (/ DELETE (?:REQ )?conn.* requestControls=1.2.840.113556.1.4.805/) {$deleteExt++; $extendedop++;}
 
 }
 
