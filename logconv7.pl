@@ -1122,7 +1122,7 @@ sub parseLine {
 			$mdconn++;
 		}
 	}
-	if (m/ ABANDON (?REQ)?conn/){
+	if (m/ ABANDON (?:REQ)?conn/){
 		$abandon++;
 		$allResults++;
 		if ($_ =~ /targetop= *([0-9a-zA-Z]+)/i ){
