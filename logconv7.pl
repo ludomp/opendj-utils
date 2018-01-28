@@ -143,7 +143,7 @@ $anony = "0";
 $mod = "0";
 $delete = "0";
 $add = "0";
-$modrdn = "0";
+$moddn = "0";
 $restarts = "0";
 $resource = "0";
 $broken = "0";
@@ -199,7 +199,7 @@ $sortServerSide = 0;
 
 $err[0] = "Successful Operations\n";
 $err[1] = "Operations Error(s)\n";
-$err[2] = "Protocal Errors\n";
+$err[2] = "Protocol Errors\n";
 $err[3] = "Time Limit Exceeded\n";
 $err[4] = "Size Limit Exceeded\n";
 $err[5] = "Compare False\n";
@@ -350,7 +350,7 @@ for ($count=0; $count < $fc; $count++) {
 #$notes = $notes - $vlvnotes;
 if ($notes < 0){ $notes = "0";}
 
-$allOps = $search + $mod + $add + $delete + $modrdn + $bind + $extendedop;
+$allOps = $search + $mod + $add + $delete + $moddn + $bind + $extendedop;
 
 #####################################
 #                                   #
@@ -377,7 +377,7 @@ print "Searches:                     $search\n";
 print "Modifications:                $mod\n";
 print "Adds:                         $add\n";
 print "Deletes:                      $delete\n";
-print "Mod RDNs:                     $modrdn\n";
+print "Mod DNs:                      $moddn\n";
 print "Delete Subtree                $deleteExt\n";
 print "Sort Server Side              $sortServerSide\n";
 print "\n";
@@ -487,7 +487,7 @@ print " Start TLS:                   $startTLS\n";
 print " SASL Binds:                  $sasl\n";
 if ($sasl > 0){
 	foreach $saslb ( sort {$saslmech{$b} <=> $saslmech{$a} } (keys %saslmech) ){
-		printf "  %-4s  %-12s\n",$saslmech{$saslb}, $saslb;   
+		printf "  %-4s  %-12s\n",$saslmech{$saslb}, $saslb;
 	}
 }
 
@@ -607,7 +607,7 @@ if ($concount > 0){
 if ($usage =~ /i/i || $verb eq "yes"){
 	@ipkeys = keys %ip_hash;
 	@exxCount = keys %exCount;
-	$ip_count = ($#ipkeys + 1)-($#exxCount + 1); 
+	$ip_count = ($#ipkeys + 1)-($#exxCount + 1);
 	if ($ip_count > 0){
 		print "\n\n----- Top $sizeCount Clients -----\n\n";
 		print "Number of Clients:  $ip_count\n\n";
@@ -640,7 +640,7 @@ if ($usage =~ /i/i || $verb eq "yes"){
 
 ###################################
 #                                 #
-#   Gather All unique Bind DN's   #
+#   Gather All unique Bind DNs    #
 #                                 #
 ###################################
 
@@ -648,8 +648,8 @@ if ($usage =~ /b/i || $verb eq "yes"){
 	@bindkeys = keys %bindlist;
 	$bind_count = $#bindkeys + 1;
 	if ($bind_count > 0){
-		print "\n----- Top $sizeCount Bind DN's -----\n\n";
-		print "Number of Unique Bind DN's: $bind_count\n\n"; 
+		print "\n----- Top $sizeCount Bind DNs -----\n\n";
+		print "Number of Unique Bind DN's: $bind_count\n\n";
 
 		$bindcount = 0;
 
@@ -688,7 +688,7 @@ if ($usage =~ /a/i || $verb eq "yes"){
 		}
 	}
 }
- 
+
 #########################################
 #                                       #
 #   Gather and process search filters   #
@@ -700,7 +700,7 @@ if ($usage =~ /l/ || $verb eq "yes"){
 	@filterkeys = keys %filter;
 	$filter_count = $#filterkeys + 1;
 	if ($filter_count > 0){
-		print "\n\n----- Top $sizeCount Search Filters -----\n";  
+		print "\n\n----- Top $sizeCount Search Filters -----\n";
 		print "\nNumber of Unique Search Filters: $filter_count\n\n";
 
 		$filtercount = 0;
@@ -726,7 +726,7 @@ if ($usage =~ /l/ || $verb eq "yes"){
 #########################################
 #                                       #
 # Gather and Process the unique etimes  #
-#                                       # 
+#                                       #
 #########################################
 
 
@@ -815,7 +815,7 @@ if ($usage =~ /x/i || $verb eq "yes"){
 
 ############################################
 #
-# Print most commonly requested attributes 
+# Print most commonly requested attributes
 #
 ############################################
 
@@ -840,7 +840,7 @@ if ($usage =~ /r/i || $verb eq "yes"){
 
 #################################
 #
-# abandoned operation stats 
+# abandoned operation stats
 #
 #################################
 
@@ -853,12 +853,12 @@ if ($usage =~ /g/i || $verb eq "yes"){
 		for ($g = 0; $g < $ac; $g++){
 			for ($sc = 0; $sc < $sconn; $sc++){
 				if ($srchConn[$sc] eq $targetConn[$g] && $srchOp[$sc] eq $targetOp[$g] ){
-					print " - SRCH conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";	
+					print " - SEARCH conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($dc = 0; $dc < $dconn; $dc++){
 				if ($delConn[$dc] eq $targetConn[$g] && $delOp[$dc] eq $targetOp[$g]){
-					print " - DEL conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+					print " - DELETE conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($adc = 0; $adc < $aconn; $adc++){
@@ -868,12 +868,12 @@ if ($usage =~ /g/i || $verb eq "yes"){
 			}
 			for ($mc = 0; $mc < $mconn; $mc++){
 				if ($modConn[$mc] eq $targetConn[$g] && $modOp[$mc] eq $targetOp[$g]){
-					print " - MOD conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+					print " - MODIFY conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($mdc = 0; $mdc < $mdconn; $mdc++){
-				if ($modrdnConn[$mdc] eq $targetConn[$g] && $modrdnOp[$mdc] eq $targetOp[$g]){
-					print " - MODRDN conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+				if ($moddnConn[$mdc] eq $targetConn[$g] && $moddnOp[$mdc] eq $targetOp[$g]){
+					print " - MODIFYDN conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 			for ($bcb = 0; $bcb < $bconn; $bcb++){
@@ -888,7 +888,7 @@ if ($usage =~ /g/i || $verb eq "yes"){
 			}
 			for ($ec = 0; $ec < $econn; $ec++){
 				if ($extConn[$ec] eq $targetConn[$g] && $extOp[$ec] eq $targetOp[$g]){
-					print " - EXT conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
+					print " - EXTENDED conn=$targetConn[$g] op=$targetOp[$g] msgid=$msgid[$g] client=$conn_hash{$targetConn[$g]}\n";
 				}
 			}
 		}
@@ -958,7 +958,7 @@ if ($usage =~ /j/i || $verb eq "yes"){
 	}
 	
 	if ($objectclass > ($search *.25)){
-		print "\n $recCount.  You have a high number of searches that query the entire search base.  Although this is not necessarily bad, it could be resource intensive if the search base contains many entries.\n"; 
+		print "\n $recCount.  You have a high number of searches that query the entire search base.  Although this is not necessarily bad, it could be resource intensive if the search base contains many entries.\n";
 		$recCount++;
 	}
 	
@@ -975,9 +975,9 @@ sub displayUsage {
 	print "Usage:\n\n";
 
 	print " ./logconv.pl [-h] [-d <rootDN>] [-s <size limit>] [-v] [-V]\n";
-	print " [-S <start time>] [-E <end time>]\n"; 
+	print " [-S <start time>] [-E <end time>]\n";
 	print " [-efcibaltnxgju] [ access log ... ... ]";
-	print "\n\n"; 
+	print "\n\n";
 
 	print "- Commandline Switches:\n\n";
 
@@ -985,7 +985,7 @@ sub displayUsage {
         print "         -d <Directory Managers DN>  DEFAULT -> cn=directory manager\n";
         print "         -s <Number of results to return per catagory>  DEFAULT -> 20\n";
         print "         -X <IP address to exclude from connection stats>  E.g. Load balancers\n";
-        print "         -v show version of tool\n"; 
+        print "         -v show version of tool\n";
         print "         -S <time to begin analyzing logfile from>\n";
         print "             E.g. [28/Mar/2002:13:14:22 -0800]\n";
         print "         -E <time to stop analyzing logfile>\n";
@@ -1054,40 +1054,40 @@ sub parseLine {
 	if ($iff >= 10000) { print STDERR sprintf" %10s Lines Processed\n",$ff; $iff="0";}
 	
 	#if (m/ RESULT err/) {$allResults++;}
-	if (m/ RES/) {$allResults++;}
-	#if (m/ SRCH/) {
-	if (m/ SEARCH REQ/) {
+	if (m/ RES conn/) {$allResults++;}
+	if (m/ (SEARCH|DELETE|MODIFY|ADD|MODIFYDN|ABANDON|EXTENDED|BIND) conn/) {$allResults++;}
+
+	if (m/ SEARCH (?:REQ )?conn/) {
 		$search++;
-		if ($_ =~ / attrs=\"(.*)\"/i) {
+		if ($_ =~ / attrs=\"([^"]*)\"/i) {
 			$anyAttrs++;
-			$attrs = $1 . " ";
-			while ($attrs =~ /(\S+)\s/g) {
-				$attr{$1}++;
+			foreach my $sel (split /[, ]/, $1) {
+				$attr{$sel}++;
 			}
-		} 
+		}
 		if (/ attrs=ALL/) {
 			$attr{"All Attributes"}++;
 			$anyAttrs++;
 		}
 	
-		if ($verb eq "yes"){ 
+		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $srchConn[$sconn] = $1;}
 			if ($_ =~ /op= *([0-9]+)/i){ $srchOp[$sconn] = $1;}
 			$sconn++;
 		}
 			
 		##### This to get the Base and Scope value
-		##### just in case this happens to be an 
+		##### just in case this happens to be an
 		##### unindexed search....
 	
 	#	if ($_ =~ /base=\"(.*)\" scope=(\d) filter/) {
-		if ($_ =~ /base=\"(.*)\" scope=(\w+) filter/) {
+		if ($_ =~ /base=\"([^"]*)\" scope=(\w+) filter/) {
 			$tmpBase = $1;
 			$tmpScope = $2;
 		}
 	}
-	#if (m/ DEL/){
-	if (m/ DELETE REQ/){
+
+	if (m/ DELETE (?:REQ )?conn/){
 		$delete++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $delConn[$dconn] = $1;}
@@ -1095,8 +1095,8 @@ sub parseLine {
 			$dconn++;
 		}
 	}
-	#if (m/ MOD/){
-	if (m/ MODIFY REQ/){
+
+	if (m/ MODIFY (?:REQ )?conn/){
 		$mod++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $modConn[$mconn] = $1;}
@@ -1104,8 +1104,8 @@ sub parseLine {
 			$mconn++;
 		}
 	}
-	#if (m/ ADD/){
-	if (m/ ADD REQ/){
+
+	if (m/ ADD (?:REQ )?conn/){
 		$add++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $addConn[$aconn] = $1; }
@@ -1113,16 +1113,16 @@ sub parseLine {
 			$aconn++;
 		}
 	}
-	#if (m/ MODRDN/){
-	if (m/ MODIFYDN REQ/){
-		$modrdn++;
+
+	if (m/ MODIFYDN (?:REQ )?conn/){
+		$moddn++;
 		if ($verb eq "yes"){
-			if ($_ =~ /conn= *([0-9]+)/i){ $modrdnConn[$mdconn] = $1; }
-			if ($_ =~ /op= *([0-9]+)/i){ $modrdnOp[$mdconn] = $1; }
+			if ($_ =~ /conn= *([0-9]+)/i){ $moddnConn[$mdconn] = $1; }
+			if ($_ =~ /op= *([0-9]+)/i){ $moddnOp[$mdconn] = $1; }
 			$mdconn++;
 		}
 	}
-	if (m/ ABANDON /){
+	if (m/ ABANDON (?:REQ)?conn/){
 		$abandon++;
 		$allResults++;
 		if ($_ =~ /targetop= *([0-9a-zA-Z]+)/i ){
@@ -1139,7 +1139,7 @@ sub parseLine {
 		$vlv++;
 	}
 #	if (m/ SORT /){$sortvlv++}
-	if (m/ SEARCH REQ/ && /1\.2\.840\.113556\.1\.4\.473/ && /2\.16\.840\.1\.113730\.3\.4\.9/){$sortvlv++}
+	if (m/ SEARCH (?:REQ )?conn/ && /1\.2\.840\.113556\.1\.4\.473/ && /2\.16\.840\.1\.113730\.3\.4\.9/){$sortvlv++}
 	if (m/ version=2/){$version2++}
 	if (m/ version=3/){$version3++}
 	#if (m/ conn=0 fd=/){$restarts++}
@@ -1150,7 +1150,7 @@ sub parseLine {
 	if (m/ CONNECT/){
 		$exc = "no";
 		#if ($_ =~ /connection from *([0-9\.]+)/i ) {
-		if ($_ =~ /CONNECT conn=[0-9]+ from=([0-9\.]+)/i ) { 
+		if ($_ =~ /CONNECT conn=[0-9]+ from=([0-9\.]+)/i ) {
 			for ($xxx = 0; $xxx <= $#exclude; $xxx++) {
 				if ($exclude[$xxx] eq $1) {$exc = "yes";}
 			}
@@ -1198,7 +1198,7 @@ sub parseLine {
 		if ($diff >= 16) { $latency[6] ++;}
 	}
 	# Bind Requests
-	if (m/ BIND REQ/){
+	if (m/ BIND (?:REQ )?conn/){
 		$bind++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $bindConn[$bconn] = $1; }
@@ -1208,20 +1208,20 @@ sub parseLine {
 	}
 	
 	# As Directory Manager
-	if (m/ BIND REQ / && m/$manager/i){$dirmgr++}
+	if (m/ BIND (?:REQ )?conn/ && m/$manager/i){$dirmgr++}
 	
 	# Anonymous
-	if (m/(SEARCH|ADD|COMPARE|DELETE|MODIFY|MODIFYDN) REQ .* op=0 / || m/ BIND REQ .* dn=\"\"/){ # implicit BIND || explicit BIND
-		$anony++; 
+	if (m/(SEARCH|ADD|COMPARE|DELETE|MODIFY|MODIFYDN) (?:REQ )?conn.* op=0 / || m/ BIND (?:REQ )?conn.* dn=\"\"/){ # implicit BIND || explicit BIND
+		$anony++;
 		$bindlist{"Anonymous Binds"}++;
 	}
 
 	# Capture Bind DN
-	if (m/ BIND REQ .* type=.* dn=\"(.*)\"/i ){
-		if ($1 ne ""){ 
+	if (m/ BIND (?:REQ )?conn.* type=.* dn=\"([^"]*)\"/i ){
+		if ($1 ne ""){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
-			$bindlist{$tmpp} = $bindlist{$tmpp} + 1; 
+			$bindlist{$tmpp} = $bindlist{$tmpp} + 1;
 	
 			$bindInfo[$bc][0] = $tmpp;
 			if ($_ =~ /conn= *([0-9]+)/i) { $bindInfo[$bc][1] = $1; }
@@ -1230,9 +1230,7 @@ sub parseLine {
 		}
 	}
 	
-	
-	#if (m/ UNBIND/){
-	if (m/ UNBIND REQ/){
+	if (m/ UNBIND (?:REQ )?conn/){
 		$unbind++;
 		if ($verb eq "yes"){
 			if ($_ =~ /conn= *([0-9]+)/i){ $unbindConn[$ubconn] = $1; }
@@ -1240,8 +1238,8 @@ sub parseLine {
 			$ubconn++;
 		}
 	}
-	#if (m/ notes=U/){
-	if (m/ SEARCH RES .* unindexed/ || m/which does not have a default ordering matching rule and no ordering rule was specified in the sort key/){
+
+	if (m/ SEARCH (?:RES )?conn.* unindexed/ || m/which does not have a default ordering matching rule and no ordering rule was specified in the sort key/){
 		if ($_ =~ /conn= *([0-9]+)/i){
 			$con = $1;
 			if ($_ =~ /op= *([0-9]+)/i){ $op = $1;}
@@ -1342,8 +1340,8 @@ sub parseLine {
 			}
 			$ip = $1;
 			$ip_hash{$ip}{"count"}++;
-			if ($_ =~ /conn= *([0-9]+)/i ){ 
-				if ($exc ne "yes"){	$ip_hash2{$ip} = sprintf "%-12s               %18s\n",$1,$ip;} 
+			if ($_ =~ /conn= *([0-9]+)/i ){
+				if ($exc ne "yes"){	$ip_hash2{$ip} = sprintf "%-12s               %18s\n",$1,$ip;}
 				$conn_hash{$1} = $ip;
 			}	
 		}
@@ -1409,7 +1407,7 @@ sub parseLine {
 		}
 		if (m/- T2/){
 			if ($_ =~ /conn= *([0-9]+)/i) {
-				$exc = "no"; 
+				$exc = "no";
 				$ip = $conn_hash{$1};
 				if ($ip eq ""){$ip = "Unknown Host";}
 				for ($xxx = 0; $xxx <= $#exclude; $xxx++){
@@ -1528,8 +1526,8 @@ sub parseLine {
 			}
 		}
 	}
-	#if ($_ =~ /err= *([0-9]+)/i){
-	if ($_ =~ / RES .* result=([0-9]+)/i){
+
+	if ($_ =~ / (?:RES )?conn.* result=([0-9]+)/i){
 		$er[$1]++;
 		if ($1 ne "0"){ $errorck++;}
 		else { $errorsucc++;}
@@ -1542,7 +1540,7 @@ sub parseLine {
 	# Donc je ne sais pas comment mapper les autres tags
 	
 	#if ($_ =~ / tag=101 nentries= *([0-9]+)/i ) {$nentries{$1}++}
-	if ($_ =~ / SEARCH RES .* nentries= *([0-9]+)/i ) {$nentries{$1}++}
+	if ($_ =~ / SEARCH (?:RES )?conn.* nentries= *([0-9]+)/i ) {$nentries{$1}++}
 	if ($_ =~ / tag=111 nentries= *([0-9]+)/i ) {$nentries{$1}++}
 	if ($_ =~ / tag=100 nentries= *([0-9]+)/i ) {$nentries{$1}++}
 	if ($_ =~ / tag=115 nentries= *([0-9]+)/i ) {$nentries{$1}++}
@@ -1553,7 +1551,7 @@ sub parseLine {
 	}
 	
 	#if (m/ EXT oid=/){
-	if (m/ EXTENDED REQ .* oid=/){
+	if (m/ EXTENDED (?:REQ )?conn.* oid=/){
 		$extendedop++;
 		if ($_ =~ /oid=\" *([0-9\.]+)/i ){ $oid{$1}++; }
 		if ($verb eq "yes"){
@@ -1564,18 +1562,16 @@ sub parseLine {
 	}
 	
 	if ($usage =~ /l/ || $verb eq "yes"){
-	#	if (/ SRCH / && / attrs=/ && $_ =~ /filter=\"(.*)\" /i ){
-		if (/ SEARCH REQ / && / attrs=/ && $_ =~ /filter=\"(.*)\" /i ){
+		if (/ SEARCH (?:REQ )?conn/ && / attrs=/ && $_ =~ /filter=\"([^"]*)\" /i ){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
 			$tmpp =~ s/\\22/\"/g;
-			$filter{$tmpp} = $filter{$tmpp} + 1; 
+			$filter{$tmpp} = $filter{$tmpp} + 1;
 			$filterInfo[$fcc][0] = $tmpp;
 			if ($_ =~ /conn= *([0-9]+)/i) { $filterInfo[$fcc][1] = $1; }
 			if ($_ =~ /op= *([0-9]+)/i) { $filterInfo[$fcc][2] = $1; }
 			$fcc++;
-	#	} elsif (/ SRCH / && $_ =~ /filter=\"(.*)\"/i){
-		} elsif (/ SEARCH REQ / && $_ =~ /filter=\"(.*)\"/i){
+		} elsif (/ SEARCH (?:REQ )?conn/ && $_ =~ /filter=\"([^"]*)\"/i){
 			$tmpp = $1;
 			$tmpp =~ tr/A-Z/a-z/;
 			$tmpp =~ s/\\22/\"/g;
@@ -1588,9 +1584,7 @@ sub parseLine {
 	}
 	
 	if ($usage =~ /a/ || $verb eq "yes"){
-	#	if (/ SRCH /   && $_ =~ /base=\"(.*)\" scope/i ){
-		if (/ SEARCH REQ/   && $_ =~ /base=\"(.*)\" scope/i ){
-	#	if (/ SEARCH REQ/   && $_ =~ /base=\"(.*)[^cn=config]\" scope/i ){ # Exclude base searches ending with cn=config
+		if (/ SEARCH (?:REQ )?conn/   && $_ =~ /base=\"([^"]*)\" scope/i ){
 			if ($1 eq ""){$tmpp = "Root DSE";}
 			else {$tmpp = $1;}
 			$tmpp =~ tr/A-Z/a-z/;
@@ -1600,7 +1594,7 @@ sub parseLine {
 	
 	
 	if ($usage =~ /f/ || $verb eq "yes"){
-		if (/ BIND RES .* result=49 authFailureID=/ ){
+		if (/ BIND (RES )?conn.* result=49 authFailureID=/ ){
 			if ($_ =~/ as user (.*) because /i){
 				$ds6xbadpwd{$1}++;
 				$bpc++;
@@ -1621,7 +1615,7 @@ sub parseLine {
 	
 	if (/ BIND / && /method=sasl/i){
 		$sasl++;
-		if ($_ =~ /mech=(.*)/i ){     
+		if ($_ =~ /mech=(.*)/i ){
 			$saslmech{$1}++;
 		}
 	}
@@ -1632,12 +1626,11 @@ sub parseLine {
 	
 	if (/ conn=/ && /op=/ && / REFERRAL/){ $referral++; }
 	
-#	if (/ options=persistent/){$persistent++;}
-	if (/ SEARCH REQ .* requestControls=2.16.840.1.113730.3.4.3/){$persistent++; $extendedop++;}
+	if (/ SEARCH (?:REQ )?conn.* requestControls=2.16.840.1.113730.3.4.3/){$persistent++; $extendedop++;}
 	
-	if (/ SEARCH REQ .* requestControls=1.2.840.113556.1.4.473$/){$sortServerSide++; $extendedop++;}
+	if (/ SEARCH (?:REQ )?conn.* requestControls=1.2.840.113556.1.4.473$/){$sortServerSide++; $extendedop++;}
 
-	if (/ DELETE REQ .* requestControls=1.2.840.113556.1.4.805/) {$deleteExt++; $extendedop++;}
+	if (/ DELETE (?:REQ )?conn.* requestControls=1.2.840.113556.1.4.805/) {$deleteExt++; $extendedop++;}
 
 }
 
