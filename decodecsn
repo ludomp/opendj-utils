@@ -24,9 +24,9 @@ lograte.py
 # CDDL HEADER END
 #
 #
-#      Copyright 2012 ForgeRock Inc.
+#      Copyright 2018 ForgeRock AS.
 
-Created by Ludovic Poitou on 2012-01-10.
+Created by Ludovic Poitou on 2018-10-04.
 
 This program reads OpenDJ's replication Change Sequence Numbers (CSN)
  and output a readable version.
