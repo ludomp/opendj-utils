@@ -1,0 +1,96 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+lograte.py
+
+# CDDL HEADER START
+#
+# The contents of this file are subject to the terms of the
+# Common Development and Distribution License, Version 1.0 only
+# (the "License").  You may not use this file except in compliance
+# with the License.
+#
+# You can obtain a copy of the license at
+# http://forgerock.org/license/CDDLv1.0.html.
+# See the License for the specific language governing permissions
+# and limitations under the License.
+#
+# When distributing Covered Code, include this CDDL HEADER in each
+# file. If applicable, add the following below this CDDL HEADER,
+# with the fields enclosed by brackets "[]" replaced with your own
+# identifying information:
+#      Portions Copyright [yyyy] [name of copyright owner]
+#
+# CDDL HEADER END
+#
+#
+#      Copyright 2012 ForgeRock Inc.
+
+Created by Ludovic Poitou on 2012-01-10.
+
+This program reads OpenDJ's replication Change Sequence Numbers (CSN)
+ and output a readable version.
+"""
+
+import sys
+import getopt
+import string
+import datetime
+import pytz
+
+help_message = '''
+Usage: decodecsn [-z timezone] csn [csn ...]
+'''
+
+def decodeCSN(str, tz):
+	if str.startswith("0000"):
+		# Historical version
+		ts = long(str[0:16], 16)
+		Id = int(str[16:20], 16)
+		seq = int(str[20:28], 16)
+	elif str.startswith("01"):
+		# Version starting with 6.5.0
+		IdSize = int(str[2:4], 16)
+		Id = str[-IdSize:]
+		ts = long(str[4:16], 16)
+		seq = int(str[16:24], 16)
+	tsutc = datetime.datetime.fromtimestamp(ts / 1000.0, pytz.utc)
+	if tz == "":
+		tsstr = tsutc.strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+	else:
+		tsstr = tsutc.astimezone(tz).strftime('%Y-%m-%d %H:%M:%S.%f %Z')
+	print "CSN:", str, ">> TS:", tsstr, "(", ts, ") - Seq:", seq, "- ReplicaId:", Id
+
+class Usage(Exception):
+	def __init__(self, msg):
+		self.msg = msg
+	
+def main(argv=None):
+	tz = ""
+	if argv is None:
+		argv = sys.argv
+	try:
+		try:
+			opts, args = getopt.getopt(argv[1:], "hz:", ["help"])
+		except getopt.error, msg:
+			raise Usage(msg)
+		
+		# option processing
+		for option, value in opts:
+			if option in ("-z"):
+				zone = value
+				tz = pytz.timezone(zone)
+			if option in ("-h", "--help"):
+				raise Usage(help_message)
+	
+	except Usage, err:
+		print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
+		print >> sys.stderr, "\t for help use --help"
+		return 2
+	
+	for csn in args:
+		decodeCSN(csn, tz)
+
+if __name__ == "__main__":
+	sys.exit(main())
+

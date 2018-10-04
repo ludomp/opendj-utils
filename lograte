@@ -1,0 +1,346 @@
+#!/usr/bin/env python
+# encoding: utf-8
+"""
+lograte.py
+
+# CDDL HEADER START
+#
+# The contents of this file are subject to the terms of the
+# Common Development and Distribution License, Version 1.0 only
+# (the "License").  You may not use this file except in compliance
+# with the License.
+#
+# You can obtain a copy of the license at
+# http://forgerock.org/license/CDDLv1.0.html.
+# See the License for the specific language governing permissions
+# and limitations under the License.
+#
+# When distributing Covered Code, include this CDDL HEADER in each
+# file and include the License file at
+# trunk/opends/resource/legal-notices/OpenDS.LICENSE.  If applicable,
+# add the following below this CDDL HEADER, with the fields enclosed
+# by brackets "[]" replaced with your own identifying information:
+#      Portions Copyright [yyyy] [name of copyright owner]
+#
+# CDDL HEADER END
+#
+#
+#      Copyright 2012 ForgeRock Inc.
+
+Created by Ludovic Poitou on 2012-01-10.
+
+This program reads OpenDJ access logs and output statistics about operation throughput.
+"""
+
+import sys
+import getopt
+import re
+import string
+import datetime
+
+help_message = '''
+Usage: lograte [options] file [file ...]
+options:
+\t --stats / -s operation(s) : specifies which operations to compute stat for
+\t --output / -o output : specifies the output file, otherwise stdout is used
+\t --graph / -g : generate csv output to import in spreadsheet and graph
+\t -r : include replicated operations
+\t -c : access log in combined mode (single line per operation)
+\t -v : verbose mode
+
+'''
+
+class OpStat():
+	def __init__(self, type):
+		self.type = type
+		self.totalcount = long(0)
+		self.currentcount = long(0)
+		self.max = long(0)
+	
+	def inc(self):
+		self.currentcount += 1
+	
+	def summarise(self):
+		self.totalcount += self.currentcount
+		if self.max < self.currentcount:
+			self.max = self.currentcount
+		self.currentcount = long(0)
+	
+	def printCurrentStats(self, outfile):
+		if self.currentcount != 0:
+			outfile.write(self.type + ":\t" + str(self.currentcount) + "\n")
+	
+	def printStats(self, outfile, duration):
+		if duration > 0:
+			outfile.write(self.type + "\tAvg: " + str(self.totalcount / duration) +  "\tMax: " + str(self.max) + "\n")
+
+class Usage(Exception):
+	def __init__(self, msg):
+		self.msg = msg
+
+def main(argv=None):
+	output = ""
+	ops= ""
+	includeReplOps = False
+	doSearch = True
+	doAdd = True
+	doBind = True
+	doCompare = True
+	doDelete = True
+	doExtended = True
+	doModify = True
+	doModDN = True
+	doAbandon = True
+	isCombined = False
+	isCSV = False
+	
+	IDs = {}
+	if argv is None:
+		argv = sys.argv
+	try:
+		try:
+			opts, args = getopt.getopt(argv[1:], "cgho:rs:v", ["help", "output=", "combined", "stats"])
+		except getopt.error, msg:
+			raise Usage(msg)
+		
+		# option processing
+		for option, value in opts:
+			if option == "-v":
+				verbose = True
+			if option == "-r":
+				includeReplOps = True
+			if option in ("-c", "--combined"):
+				isCombined = True
+			if option in ("-g", "--graph"):
+				isCSV = True
+			if option in ("-h", "--help"):
+				raise Usage(help_message)
+			if option in ("-o", "--output"):
+				output = value
+			if option in ("-s", "--stats"):
+				ops = value
+	
+	except Usage, err:
+		print >> sys.stderr, sys.argv[0].split("/")[-1] + ": " + str(err.msg)
+		print >> sys.stderr, "\t for help use --help"
+		return 2
+	
+	if output != "":
+		try:
+			outfile = open(output, "w")
+		except Usage, err:
+			print >> sys.stderr, "Can't open output file: " + str(err.msg)
+	else:
+		outfile = sys.stdout
+	
+	if ops != "":
+		doSearch = False
+		doAdd = False
+		doBind = False
+		doCompare = False
+		doDelete = False
+		doExtended = False
+		doModify = False
+		doModDN = False
+		doAbandon = False
+		opers = ops.split(',')
+		for op in opers:
+			if op == "Search":
+				doSearch = True
+				continue;
+			if op == "Add":
+				doAdd = True
+				continue
+			if op == "Bind":
+				doBind = True
+				continue
+			if op == "Compare":
+				doCompare = True
+				continue
+			if op == "Delete":
+				doDelete = True
+				continue
+			if op == "Extended":
+				doExtended = True
+				continue
+			if op == "Modify":
+				doModify = True
+				continue
+			if op == "ModDN":
+				doModDN = True
+				continue
+			if op == "Abandon":
+				doAbandon = true
+				continue
+			print >> sys.stderr, "Invalid op name in stats: " + op +", ignored"
+	
+	searches = OpStat("Search")
+	adds = OpStat("Add")
+	binds = OpStat("Bind")
+	compares = OpStat("Compare")
+	deletes = OpStat("Delete")
+	extops = OpStat("Extend")
+	modifies = OpStat("Modify")
+	moddns = OpStat("ModDN")
+	abandons = OpStat("Abandon")
+	
+	searchTag = "SEARCH RES"
+	addTag = "ADD RES"
+	bindTag = "BIND RES"
+	compareTag = "COMPARE RES"
+	deleteTag = "DELETE RES"
+	extopTag = "EXTENDED RES"
+	modifyTag = "MODIFY RES"
+	moddnTag = "MODDN RES"
+	abandonTag = "ABANDON RES"
+	
+	if isCombined:
+		searchTag = "SEARCH "
+		addTag = "ADD "
+		bindTag = "BIND "
+		compareTag = "COMPARE "
+		deleteTag = "DELETE "
+		extopTag = "EXTENDED "
+		modifyTag = "MODIFY "
+		moddnTag = "MODDN "
+		abandonTag = "ABANDON "
+    
+	lastdate = ""
+	firstdate = ""
+	date = ""
+	countseconds = long(0)
+	
+	if isCSV:
+		# Write the first header line:
+		outfile.write("Time")
+		if doAdd:
+			outfile.write(",Add")
+		if doBind:
+			outfile.write(",Bind")
+		if doCompare:
+			outfile.write(",Compare")
+		if doDelete:
+			outfile.write(",Delete")
+		if doExtended:
+			outfile.write(",Extended")
+		if doModify:
+			outfile.write(",Modify")
+		if doModDN:
+			outfile.write(",ModDN")
+		if doSearch:
+			outfile.write(",Search")
+		if doAbandon:
+			outfile.write(",Abandon")
+		outfile.write("\n")		
+	for logfile in args:
+		try:
+			infile = open(logfile, "r")
+		except err:
+			print >> sys.stderr, "Can't open file: " + str(err.msg)
+		
+		
+		if not isCSV:
+			outfile.write("processing file: "+ logfile + "\n")
+		for i in infile:
+			m = re.match("^\[(.*) \+\d\d\d\d\] ", i)
+			if m:
+				date = m.group(1)
+ 			else:
+				print >> sys.stderr, "Date parsing error on record \"" + i + "\n"
+
+			if firstdate == "":
+				firstdate = date
+			else:	
+				if date != lastdate:
+					countseconds += 1
+					if isCSV:
+						outfile.write(date)
+						if doAdd:
+							outfile.write("," + str(adds.currentcount))
+						if doBind:
+							outfile.write("," + str(binds.currentcount))
+						if doCompare:
+							outfile.write("," + str(compares.currentcount))
+						if doDelete:
+							outfile.write("," + str(deletes.currentcount))
+						if doExtended:
+							outfile.write("," + str(extops.currentcount))
+						if doModify:
+							outfile.write("," + str(modifies.currentcount))
+						if doModDN:
+							outfile.write("," + str(moddns.currentcount))
+						if doSearch:
+							outfile.write("," + str(searches.currentcount))
+						if doAbandon:
+							outfile.write("," + str(abandons.currentcount))
+						outfile.write("\n")	
+					adds.summarise()
+					binds.summarise()
+					compares.summarise()
+					deletes.summarise()
+					extops.summarise()
+					modifies.summarise()
+					moddns.summarise()
+					abandons.summarise()
+					searches.summarise()
+					lastdate = date
+			
+			if re.search(" conn=-1 ", i) and not includeReplOps:
+				continue
+			if doSearch and re.search(searchTag, i):
+				searches.inc()
+			if doAdd and re.search(addTag, i):
+				adds.inc()
+			if doBind and re.search(bindTag, i):
+				binds.inc()
+			if doCompare and re.search(compareTag, i):
+				compares.inc()
+			if doDelete and re.search(deleteTag, i):
+				deletes.inc()
+			if doExtended and re.search(extopTag, i):
+				extops.inc()
+			if doModify and re.search(modifyTag, i):
+				modifies.inc()
+			if doModDN and re.search(moddnTag, i):
+				moddns.inc()
+			if doAbandon and re.search(abandonTag, i):
+				abandons.inc()
+		
+		# Done processing that file, lets move to next one
+		infile.close()
+	
+	
+	# We're done with all files. Proceed with displaying stats
+    
+	myformat = "%d/%b/%Y:%H:%M:%S"
+	startdt = datetime.datetime.strptime(firstdate, myformat)
+	enddt = datetime.datetime.strptime(date, myformat)
+	delta = enddt - startdt
+	duration = delta.total_seconds()
+	
+	if not isCSV:
+		outfile.write("Total duration " + str(duration) + ", counted intervals: " + str(countseconds) + "\n")
+		if doAdd:
+			adds.printStats(outfile, duration)
+		if doBind:
+			binds.printStats(outfile, duration)
+		if doCompare:
+			compares.printStats(outfile, duration)
+		if doDelete:
+			deletes.printStats(outfile, duration)
+		if doExtended:
+			extops.printStats(outfile, duration)
+		if doModify:
+			modifies.printStats(outfile, duration)
+		if doModDN:
+			moddns.printStats(outfile, duration)
+		if doSearch:	
+			searches.printStats(outfile, duration)
+		if doAbandon:	
+			abandons.printStats(outfile, duration)
+		outfile.write("Done\n")
+
+	outfile.close()
+
+if __name__ == "__main__":
+	sys.exit(main())
